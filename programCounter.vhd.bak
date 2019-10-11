@@ -1,0 +1,17 @@
+entity ProgramCounter is
+port (
+EnablePC : in std_logic;
+input: in std_logic_vector (15 downto 0);
+clk : in std_logic;
+output: out std_logic_vector (15 downto 0));
+end ProgramCounter;
+
+architecture dataflow of ProgramCounter is begin
+process (clk) begin
+	if (clk = '1') then
+		if (EnablePC = '1') then
+		output <= input;
+		end if;
+	end if;
+end process;
+end dataflow;

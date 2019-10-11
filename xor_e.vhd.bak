@@ -1,0 +1,18 @@
+library IEEE;
+use ieee.std_logic_1164.all;
+entity and_e is
+port(a : in std_logic_vector(15 downto 0);
+b : in std_logic_vector(15 downto 0);
+output : out std_logic_vector(15 downto 0);
+Z : out std_logic;
+C : out std_logic);
+end entity and_e;
+
+architecture arch of and_e is
+signal outp : std_logic_vector(15 downto 0);
+begin
+	C <= '0';
+	outp <= a xor b;
+	output <= outp;
+	Z <= '1' when outp="0000000000000000" else '0';
+end architecture arch;

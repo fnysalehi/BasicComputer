@@ -1,0 +1,13 @@
+library IEEE;
+use ieee.std_logic_1164.all;
+entity IRmux is
+port(IRout11_8 : in std_logic_vector(3 downto 0);
+IRout3_0 : in std_logic_vector(3 downto 0);
+Shadow : in std_logic;
+output : out std_logic_vector(3 downto 0));
+end entity IRmux;
+
+architecture arch of IRmux is
+begin
+	output <= IRout11_8 when Shadow = '0' else IRout3_0;
+end architecture arch;

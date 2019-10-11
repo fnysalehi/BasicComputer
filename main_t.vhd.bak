@@ -1,0 +1,17 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity main_t is
+end entity main_t;
+
+architecture rtl of main_t is
+
+	signal clk, ExternalReset : std_logic := '0';
+	--signal data_in : std_logic_vector(3 downto 0);
+	signal ReadIO, WriteIO : std_logic;
+begin
+	m : work.main port map (ExternalReset, clk, ReadIO, WriteIO);
+	reset <= '1', '0' after 10 ns;
+	clk <= not clk after 50 ns;
+	--data_in <= "0101", "1010" after 100 ns;
+end architecture;

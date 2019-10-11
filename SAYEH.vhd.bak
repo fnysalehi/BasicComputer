@@ -1,0 +1,52 @@
+library IEEE;
+use ieee.std_logic_1164.all;
+entity SAYEH is
+port(
+
+	ExternalReset, memDataReady, clk	: in std_logic;
+	ReadMem, WriteMem, ReadIO,WriteIO	: out  std_logic;
+	addressbus				: inout std_logic_vector(15 downto 0);
+	databus					: inout std_logic_vector(15 downto 0));
+
+end entity SAYEH;
+
+architecture df of SAYEH is
+
+  signal IRout,addressUnitRSideBus: std_logic_vector(15 downto 0);
+  signal IRmout: std_logic_vector(3 downto 0);
+  signal WPout: std_logic_vector(5 downto 0);
+  signal Zout,Cout,
+	EnablePC,ResetPC, PCplusI, PCplus1, RplusI, Rplus0, Address_on_Databus,			
+	RFLwrite, RFHwrite, Rs_on_AddressUnitRSide, Rd_on_AddressUnitRSide,				
+	B15to0, AandB, AorB, AxorB, notB, AaddB, AsubB, AmulB, AcmpB, ShrB, ShlB, ALU_on_Databus,	
+	WPreset, WPadd,																									
+	IRload,												
+	RFright_on_OpndBus,																											
+	Cset, Creset, Zset, Zreset, SRload,								
+	Shadow  : std_logic;
+ 
+  begin
+	controller   :entity work.Controller_a port map(clk, ExternalReset, Cout, Zout, memDataReady, databus, EnablePC,ResetPC, PCplusI, PCplus1, RplusI, Rplus0, Address_on_Databus,			
+		RFLwrite, RFHwrite, Rs_on_AddressUnitRSide, Rd_on_AddressUnitRSide,				
+		B15to0, AandB, AorB, AxorB, notB, AaddB, AsubB, AmulB, AcmpB, ShrB, ShlB, ALU_on_Databus,	
+		WPreset, WPadd,																									
+		IRload,												
+		RFright_on_OpndBus,									
+		ReadMem, WriteMem,										
+		ReadIO,WriteIO,											
+		Cset, Creset, Zset, Zreset, SRload,								
+		Shadow);
+
+
+	datapath     :entity work.datapath port map(addressbus,databus,addressUnitRSideBus,
+	clk, 
+	EnablePC,ResetPC, PCplusI, PCplus1, RplusI, Rplus0, Address_on_Databus,			
+	RFLwrite, RFHwrite, Rs_on_AddressUnitRSide, Rd_on_AddressUnitRSide,				
+	B15to0, AandB, AorB, AxorB, notB, AaddB, AsubB, AmulB, AcmpB, ShrB, ShlB, ALU_on_Databus,	
+	WPreset, WPadd,																										
+	IRload,												
+	Cset, Creset, Zset, Zreset, SRload,								
+	Shadow,                   
+	Cout, Zout );
+
+end architecture df;

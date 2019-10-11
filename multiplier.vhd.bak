@@ -1,0 +1,126 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity mult is
+
+port (
+a : in std_logic_vector(15 downto 0);
+b : in std_logic_vector(15 downto 0);
+product  : out std_logic_vector(15 downto 0);
+carry : out std_logic);
+
+end mult;
+
+architecture Behavioral of mult is
+ component adder is
+    port (A   : in std_logic_vector(15 downto 0);
+          B   : in std_logic_vector(15 downto 0);
+	  Cin : in std_logic;
+          S   : out std_logic_vector(15 downto 0);
+          Cout: out std_logic);
+  end component ;
+  
+  signal product1 : std_logic_vector(15 downto 0):="0000000000000000";
+  signal product2 : std_logic_vector(15 downto 0):="0000000000000000";
+  signal product3 : std_logic_vector(15 downto 0):="0000000000000000";
+  signal product4 : std_logic_vector(15 downto 0):="0000000000000000";
+  signal product5 : std_logic_vector(15 downto 0):="0000000000000000";
+  signal product6 : std_logic_vector(15 downto 0):="0000000000000000";
+  signal product7 : std_logic_vector(15 downto 0):="0000000000000000";
+  signal product8 : std_logic_vector(15 downto 0):="0000000000000000";
+  signal t1 : std_logic_vector(16 downto 0):="00000000000000000";
+  signal t2 : std_logic_vector(16 downto 0):="00000000000000000";
+  signal t3 : std_logic_vector(16 downto 0):="00000000000000000";
+  signal t4 : std_logic_vector(16 downto 0):="00000000000000000";
+  signal t5 : std_logic_vector(16 downto 0):="00000000000000000";
+  signal t6 : std_logic_vector(16 downto 0):="00000000000000000";
+  signal do : std_logic_vector(16 downto 0):="00000000000000000";
+  
+  begin
+add1: adder port map (product1 , product2, '0' , t1(15 downto 0) , t1(16) );
+add2: adder port map (t1(15 downto 0) , product3 , '0' , t2(15 downto 0) , t2(16) );
+add3: adder port map (t2(15 downto 0) , product4 , '0' , t3(15 downto 0) , t3(16) );
+add4: adder port map (t3(15 downto 0) , product5 , '0' , t4(15 downto 0) , t4(16) );
+add5: adder port map (t4(15 downto 0) , product6 , '0' , t5(15 downto 0) , t5(16) );
+add6: adder port map (t5(15 downto 0) , product7 , '0' , t6(15 downto 0) , t6(16) );
+add7: adder port map (t6(15 downto 0) , product8 , '0' , do(15 downto 0) , do(16) );
+ 
+carry <= '0';
+-------------------------------------------------------------------------------------------------------------------  
+product1(0)<=b(0) and a(0);
+product1(1)<=b(0) and a(1);
+product1(2)<=b(0) and a(2);
+product1(3)<=b(0) and a(3);
+product1(4)<=b(0) and a(4); 
+product1(5)<=b(0) and a(5);
+product1(6)<=b(0) and a(6);
+product1(7)<=b(0) and a(7);
+-------------------------------------------------------------------------------------------------------------------
+product2(1)<=b(1) and a(0);
+product2(2)<=b(1) and a(1);
+product2(3)<=b(1) and a(2);
+product2(4)<=b(1) and a(3);
+product2(5)<=b(1) and a(4);
+product2(6)<=b(1) and a(5);
+product2(7)<=b(1) and a(6);
+product2(8)<=b(1) and a(7);
+--------------------------------------------------------------------------------------------------------------------
+product3(2)<=b(2) and a(0);
+product3(3)<=b(2) and a(1);
+product3(4)<=b(2) and a(2);
+product3(5)<=b(2) and a(3);
+product3(6)<=b(2) and a(4);
+product3(7)<=b(2) and a(5);
+product3(8)<=b(2) and a(6);
+product3(9)<=b(2) and a(7);
+---------------------------------------------------------------------------------------------------------------------
+product4(3)<=b(3) and a(0);
+product4(4)<=b(3) and a(1);
+product4(5)<=b(3) and a(2);
+product4(6)<=b(3) and a(3);
+product4(7)<=b(3) and a(4);
+product4(8)<=b(3) and a(5);
+product4(9)<=b(3) and a(6);
+product4(10)<=b(3) and a(7);
+---------------------------------------------------------------------------------------------------------------------
+product5(4)<=b(4) and a(0);
+product5(5)<=b(4) and a(1);
+product5(6)<=b(4) and a(2);
+product5(7)<=b(4) and a(3);
+product5(8)<=b(4) and a(4);
+product5(9)<=b(4) and a(5);
+product5(10)<=b(4) and a(6);
+product5(11)<=b(4) and a(7);
+---------------------------------------------------------------------------------------------------------------------
+product6(5)<=b(5) and a(0);
+product6(6)<=b(5) and a(1);
+product6(7)<=b(5) and a(2);
+product6(8)<=b(5) and a(3);
+product6(9)<=b(5) and a(4);
+product6(10)<=b(5) and a(5);
+product6(11)<=b(5) and a(6);
+product6(12)<=b(5) and a(7);
+---------------------------------------------------------------------------------------------------------------------
+product7(6)<=b(6) and a(0);
+product7(7)<=b(6) and a(1);
+product7(8)<=b(6) and a(2);
+product7(9)<=b(6) and a(3);
+product7(10)<=b(6) and a(4);
+product7(11)<=b(6) and a(5);
+product7(12)<=b(6) and a(6);
+product7(13)<=b(6) and a(7);
+---------------------------------------------------------------------------------------------------------------------
+product8(7)<=b(7) and a(0);
+product8(8)<=b(7) and a(1);
+product8(9)<=b(7) and a(2);
+product8(10)<=b(7) and a(3);
+product8(11)<=b(7) and a(4);
+product8(12)<=b(7) and a(5);
+product8(13)<=b(7) and a(6);
+product8(14)<=b(7) and a(7);
+---------------------------------------------------------------------------------------------------------------------
+
+ product <= do(15 downto 0);
+end Behavioral;
+
+

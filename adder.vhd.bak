@@ -1,0 +1,59 @@
+-- This is the FULL ADDER
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity Full_Adder is
+   port( X, Y, Cin : in std_logic;
+         sum, Cout : out std_logic);
+end Full_Adder;
+
+architecture func of Full_Adder is
+begin
+   sum <= (X xor Y) xor Cin;
+   Cout <= (X and Y) or ((X xor Y) and Cin);
+end func;
+
+--Adder 
+library ieee;
+use ieee.std_logic_1164.all;
+entity adder is 
+   port(  A   : in std_logic_vector(15 downto 0);
+          B   : in std_logic_vector(15 downto 0);
+	  Cin : in std_logic;
+          S   : out std_logic_vector(15 downto 0);
+          Cout: out std_logic);
+end adder;
+
+architecture struct of adder is
+
+   component Full_Adder is	         --FULL ADDER component
+      port( X, Y, Cin : in std_logic;
+            sum, Cout : out std_logic);
+   end component;
+	
+   signal C : std_logic_vector(16 downto 1); 
+
+begin
+   
+   FA0:  Full_Adder port map(A(0),  B(0),  Cin,    S(0),  C(1));  
+   FA1:  Full_Adder port map(A(1),  B(1),  C(1),   S(1),  C(2)); 
+   FA2:  Full_Adder port map(A(2),  B(2),  C(2),   S(2),  C(3)); 
+   FA3:  Full_Adder port map(A(3),  B(3),  C(3),   S(3),  C(4));  
+   FA4:  Full_Adder port map(A(4),  B(4),  C(4),   S(4),  C(5));  
+   FA5:  Full_Adder port map(A(5),  B(5),  C(5),   S(5),  C(6));  
+   FA6:  Full_Adder port map(A(6),  B(6),  C(6),   S(6),  C(7));  
+   FA7:  Full_Adder port map(A(7),  B(7),  C(7),   S(7),  C(8));  
+   FA8:  Full_Adder port map(A(8),  B(8),  C(8),   S(8),  C(9));
+   FA9:  Full_Adder port map(A(9),  B(9),  C(9),   S(9),  C(10));  
+   FA10: Full_Adder port map(A(10), B(10), C(10),  S(10), C(11));  
+   FA11: Full_Adder port map(A(11), B(11), C(11),  S(11), C(12));  
+   FA12: Full_Adder port map(A(12), B(12), C(12),  S(12), C(13));  
+   FA13: Full_Adder port map(A(13), B(13), C(13),  S(13), C(14)); 
+   FA14: Full_Adder port map(A(14), B(14), C(14),  S(14), C(15));  
+   FA15: Full_Adder port map(A(15), B(15), C(15),  S(15), C(16)); 
+
+
+   Cout <= C(16);                                       -- Cout
+end struct;
+
+

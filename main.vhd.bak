@@ -1,0 +1,22 @@
+library IEEE;
+use ieee.std_logic_1164.all;
+entity main is
+port(
+
+	ExternalReset, clk	: in std_logic;
+	ReadIO,WriteIO	: out  std_logic;
+
+end entity main;
+
+architecture df of main is
+
+  signal addressbus,databus: std_logic_vector(15 downto 0);
+  signal memDataReady,ReadMem, WriteMem  : std_logic;
+ 
+  begin
+	sayeh   :entity work.sayeh port map(ExternalReset, memDataReady, clk, ReadMem, WriteMem, ReadIO, WriteIO, addressbus, databus);
+	memory  :entity work.memory port map(clk, ReadMem, WriteMem, addressbus, databus, memDataReady);
+
+	          
+
+end architecture df;

@@ -1,0 +1,16 @@
+library IEEE;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_signed;
+entity comparator is
+port(a : in std_logic_vector(15 downto 0);
+b : in std_logic_vector(15 downto 0);
+zeroFlag : out std_logic;
+carryFlag : out std_logic
+);
+end entity comparator;
+
+architecture arch of comparator is
+begin
+	zeroFlag <= '1' when a = b else '0';
+	carryFlag <= '1' when a > b else '0';
+end architecture arch;

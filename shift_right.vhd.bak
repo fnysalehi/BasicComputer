@@ -1,0 +1,17 @@
+library IEEE;
+use ieee.std_logic_1164.all;
+entity shift_r is
+port(a : in std_logic_vector(15 downto 0);
+output : out std_logic_vector(15 downto 0);
+C : out std_logic
+);
+end entity shift_r;
+
+architecture arch of shift_r is
+signal outshr : std_logic_vector(15 downto 0);
+begin
+	outshr(15) <= '0';
+	C <= a(0);
+	outshr(14 downto 0) <= a(15 downto 1);
+	output <= outshr ;
+end architecture arch;

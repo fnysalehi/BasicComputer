@@ -1,0 +1,583 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity Controller_a is
+	port(
+		clk, ExternalReset, Cout, Zout, memDataReady          : in  std_logic;
+		Instruction                                           : in  std_logic_vector(15 downto 0);
+		EnablePC,ResetPC, PCplusI, PCplus1, RplusI, Rplus0, Address_on_Databus,			--addressing unit
+		RFLwrite, RFHwrite, Rs_on_AddressUnitRSide, Rd_on_AddressUnitRSide,				--register file
+		B15to0, AandB, AorB, AxorB, notB, AaddB, AsubB, AmulB, AcmpB, ShrB, ShlB, ALU_on_Databus,	--ALU
+		WPreset, WPadd,											--WP															
+		IRload,												--IR
+		ReadMem, WriteMem,										--memrory
+		ReadIO,WriteIO,											--IO
+		Cset, Creset, Zset, Zreset, SRload,								--flags
+		Shadow                     : out std_logic);
+end entity;
+
+architecture dataflow of Controller_a is
+	constant bZ    : std_logic_vector (3 downto 0):= "0000";
+	constant bO    : std_logic_vector (3 downto 0):= "1111";
+	
+	constant nop   : std_logic_vector (3 downto 0):= "0000";
+	constant hlt   : std_logic_vector (3 downto 0):= "0001";
+	constant szf   : std_logic_vector (3 downto 0):= "0010";
+	constant czf   : std_logic_vector (3 downto 0):= "0011";
+	constant scf   : std_logic_vector (3 downto 0):= "0100";
+	constant ccf   : std_logic_vector (3 downto 0):= "0101";
+	constant cwp   : std_logic_vector (3 downto 0):= "0110";
+	
+	constant mvr   : std_logic_vector (3 downto 0):= "0001";
+	constant lda   : std_logic_vector (3 downto 0):= "0010";
+	constant sta   : std_logic_vector (3 downto 0):= "0011";
+	constant inp   : std_logic_vector (3 downto 0):= "0100";
+	constant oup   : std_logic_vector (3 downto 0):= "0101";
+	constant mnd   : std_logic_vector (3 downto 0):= "0110";
+	constant orr   : std_logic_vector (3 downto 0):= "0111";
+	constant mot   : std_logic_vector (3 downto 0):= "1000";
+	constant shl   : std_logic_vector (3 downto 0):= "1001";
+	constant shr   : std_logic_vector (3 downto 0):= "1010";
+	constant add   : std_logic_vector (3 downto 0):= "1011";
+	constant sub   : std_logic_vector (3 downto 0):= "1100";
+	constant mul   : std_logic_vector (3 downto 0):= "1101";
+	constant cmp   : std_logic_vector (3 downto 0):= "1110";
+	
+	constant mil   : std_logic_vector (1 downto 0):= "00";
+	constant mih   : std_logic_vector (1 downto 0):= "01";
+	constant spc   : std_logic_vector (1 downto 0):= "10";
+	constant jpa   : std_logic_vector (1 downto 0):= "11";
+
+	constant jpr   : std_logic_vector (3 downto 0):= "0111";
+	constant brz   : std_logic_vector (3 downto 0):= "1000";
+	constant brc   : std_logic_vector (3 downto 0):= "1001";
+	constant awp   : std_logic_vector (3 downto 0):= "1010";
+
+	type state is(reset, halt, fetch, decode1, decode2, exec1, exec2, exec12, exec22, exec1lda, exec1sta, exec2lda, exec2sta, incpc, default1, default2);
+	
+	signal Cstate, Nstate : state;
+	signal Regd_MemDataReady : std_logic;
+	
+begin
+	process (clk, ExternalReset)
+	variable init : boolean := true;
+	begin
+		if init = true then
+			Cstate <= reset;
+			init := false;
+		end if;
+		if ExternalReset = '1' then
+			Cstate <= reset;
+		elsif clk'event and clk = '1' then
+			Cstate <= Nstate;
+		end if;
+	end process;
+
+	process (Cstate)
+	begin
+		case Cstate is
+		when default1 =>
+			EnablePC <= '0';
+			ResetPC <= '0';
+			PCplusI <= '0';
+			PCplus1 <= '0';
+			RplusI <= '0';
+			Rplus0 <= '0';
+			Address_on_Databus <= '0';
+			RFLwrite <= '0';	
+			RFHwrite <= '0';
+			Rs_on_AddressUnitRSide <= '0';
+			Rd_on_AddressUnitRSide <= '0';	
+			B15to0 <= '0';
+			AandB <= '0';
+			AorB <= '0';
+			AxorB <= '0';
+			notB <= '0';
+			AaddB <= '0';
+			AsubB <= '0';
+			AmulB <= '0';
+			AcmpB <= '0';
+			ShrB <= '0';
+			ShlB <= '0';
+			ALU_on_Databus <= '0';
+			WPreset	<= '0';
+			WPadd <= '0';								
+			IRload <= '0';								
+			ReadMem <= '0';
+			WriteMem <= '0';							
+			ReadIO <= '0';
+			WriteIO <= '0';								
+			Cset <= '0';
+			Creset <= '0';
+			Zset <= '0';
+			Zreset <= '0';
+			SRload <= '0';					
+			Nstate <= decode2;
+
+		when default2 =>
+			EnablePC <= '0';
+			ResetPC <= '0';
+			PCplusI <= '0';
+			PCplus1 <= '0';
+			RplusI <= '0';
+			Rplus0 <= '0';
+			Address_on_Databus <= '0';
+			RFLwrite <= '0';	
+			RFHwrite <= '0';
+			Rs_on_AddressUnitRSide <= '0';
+			Rd_on_AddressUnitRSide <= '0';	
+			B15to0 <= '0';
+			AandB <= '0';
+			AorB <= '0';
+			AxorB <= '0';
+			notB <= '0';
+			AaddB <= '0';
+			AsubB <= '0';
+			AmulB <= '0';
+			AcmpB <= '0';
+			ShrB <= '0';
+			ShlB <= '0';
+			ALU_on_Databus <= '0';
+			WPreset	<= '0';
+			WPadd <= '0';								
+			IRload <= '0';								
+			ReadMem <= '0';
+			WriteMem <= '0';							
+			ReadIO <= '0';
+			WriteIO <= '0';								
+			Cset <= '0';
+			Creset <= '0';
+			Zset <= '0';
+			Zreset <= '0';
+			SRload <= '0';						
+			--Shadow  <= '0';
+			Nstate <= fetch;
+		
+		when reset =>
+			EnablePC <= '0';
+			ResetPC <= '1';
+			PCplusI <= '0';
+			PCplus1 <= '0';
+			RplusI <= '0';
+			Rplus0 <= '0';
+			Address_on_Databus <= '0';
+			RFLwrite <= '0';	
+			RFHwrite <= '0';
+			Rs_on_AddressUnitRSide <= '0';
+			Rd_on_AddressUnitRSide <= '0';	
+			B15to0 <= '0';
+			AandB <= '0';
+			AorB <= '0';
+			AxorB <= '0';
+			notB <= '0';
+			AaddB <= '0';
+			AsubB <= '0';
+			AmulB <= '0';
+			AcmpB <= '0';
+			ShrB <= '0';
+			ShlB <= '0';
+			ALU_on_Databus <= '0';
+			WPreset	<= '1';
+			WPadd <= '0';								
+			IRload <= '0';								
+			ReadMem <= '0';
+			WriteMem <= '0';							
+			ReadIO <= '0';
+			WriteIO <= '0';								
+			Cset <= '0';
+			Creset <= '1';
+			Zset <= '0';
+			Zreset <= '1';
+			SRload <= '0';						
+			Shadow  <= '0';
+			Nstate <= fetch;
+
+		when halt =>
+			Nstate <= halt;
+
+		when incpc =>
+			PCplus1 <= '1';
+			EnablePC <='1';
+			Nstate <= fetch;
+			
+
+		when fetch =>
+			ReadMem <= '1';
+			IRload <= '1';
+			Nstate <= decode1;
+
+		when decode1 =>
+			Shadow <= '0';
+			ReadMem <= '0';
+			IRload <= '0';
+			case( Instruction(15 downto 12) ) is
+
+				when mvr =>
+					B15to0 <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec1;
+
+				when lda =>
+					Rplus0 <= '1';
+					Rs_on_AddressUnitRSide <= '1';
+					ReadMem <= '1';
+					Nstate <= exec1lda;
+
+				when sta =>
+					Rplus0 <= '1';
+					Rd_on_AddressUnitRSide <= '1';
+					B15to0 <= '1';
+					ALU_on_Databus <= '1';
+					Nstate <= exec1sta;
+
+				when inp =>
+					Rplus0 <= '1';
+					Rs_on_AddressUnitRSide <= '1';
+					ReadIO <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec1;
+
+				when oup =>
+					Rplus0 <= '1';
+					Rd_on_AddressUnitRSide <= '1';
+					B15to0 <= '1';
+					ALU_on_Databus <= '1';
+					WriteIO <= '1';
+					Nstate <= exec1;
+
+				when mnd =>
+					AandB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec1;
+
+				when orr =>
+					AorB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec1;
+
+				when mot =>
+					notB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec1;
+
+				when shl =>
+					ShlB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec1;
+
+				when shr =>
+					ShrB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec1;
+
+				when add =>
+					AaddB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec1;
+
+				when sub =>
+					AsubB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec1;
+
+				when mul =>
+					AmulB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec1;
+
+				when cmp =>
+					AcmpB <= '1';
+					SRload <= '1';
+					Nstate <= exec1;
+
+				when bZ =>
+				case( Instruction(11 downto 8) ) is
+					when hlt =>
+						Nstate <= halt;
+
+					when szf =>
+						Zset <= '1';
+						Nstate <= exec1;
+
+					when czf =>
+						Zreset <= '1';
+						Nstate <= exec1;
+
+					when scf =>
+						Cset <= '1';
+						Nstate <= exec1;
+
+					when ccf =>
+						Creset <= '1';
+						Nstate <= exec1;
+
+					when cwp =>
+						WPreset <= '1';
+						Nstate <= exec1;
+					
+					when jpr =>
+						PCplusI <= '1';
+						EnablePC <='1';
+						Nstate <= exec1;
+					
+					when brz =>
+						if(Zout = '1') then 
+							PCplusI <= '1';
+							EnablePC <='1';
+							Nstate <= exec2;
+						end if;
+					
+					when brc =>
+						if(Cout = '1') then 
+							PCplusI <= '1';
+							EnablePC <='1';
+							Nstate <= exec2;
+						end if;
+					
+					when awp =>
+						WPadd <= '1';
+						Nstate <= exec2;
+					
+					when others =>
+						Nstate <= exec2;
+
+					end case;
+
+
+				when bO =>
+					case( Instruction(9 downto 8) ) is
+					
+					when mil =>
+						RFLwrite <= '1';
+						Nstate <= exec2;
+
+					when mih =>
+						RFHwrite <= '1';
+						Nstate <= exec2;
+
+					when spc =>
+						PCplusI <= '1';
+						EnablePC <='0';
+						Address_on_Databus <= '1';
+						RFLwrite <= '1';
+						RFHwrite <= '1';
+						Nstate <= exec2;
+
+					when jpa =>
+						Rd_on_AddressUnitRSide <= '1';
+						RplusI <= '1';
+						EnablePC <='1';
+						Nstate <= exec2; 	
+				
+
+					when others =>
+						Nstate <= default2;
+
+				end case ;
+			when others =>
+			end case;
+
+		when decode2 =>
+			Shadow <= '1';
+			case( Instruction(7 downto 4) ) is
+
+				when mvr =>
+					B15to0 <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec2;
+
+				when lda =>
+					Rplus0 <= '1';
+					Rs_on_AddressUnitRSide <= '1';
+					ReadMem <= '1';
+					Nstate <= exec2lda;
+
+				when sta =>
+					Rplus0 <= '1';
+					Rd_on_AddressUnitRSide <= '1';
+					B15to0 <= '1';
+					ALU_on_Databus <= '1';
+					Nstate <= exec2sta;
+
+				when inp =>
+					Rplus0 <= '1';
+					Rs_on_AddressUnitRSide <= '1';
+					ReadIO <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec2;
+
+				when oup =>
+					Rplus0 <= '1';
+					Rd_on_AddressUnitRSide <= '1';
+					B15to0 <= '1';
+					ALU_on_Databus <= '1';
+					WriteIO <= '1';
+					Nstate <= exec2;
+
+				when mnd =>
+					AandB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec2;
+
+				when orr =>
+					AorB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec2;
+
+				when mot =>
+					notB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec2;
+
+				when shl =>
+					ShlB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec2;
+
+				when shr =>
+					ShrB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec2;
+
+				when add =>
+					AaddB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec2;
+
+				when sub =>
+					AsubB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec2;
+
+				when mul =>
+					AmulB <= '1';
+					ALU_on_Databus <= '1';
+					RFLwrite <= '1';
+					RFHwrite <= '1';
+					SRload <= '1';
+					Nstate <= exec2;
+
+				when cmp =>
+					AcmpB <= '1';
+					SRload <= '1';
+					Nstate <= exec2;
+
+				when bZ =>
+				case( Instruction(3 downto 0) ) is
+					when hlt =>
+						Nstate <= halt;
+
+					when szf =>
+						Zset <= '1';
+						Nstate <= exec2;
+
+					when czf =>
+						Zreset <= '1';
+						Nstate <= exec2;
+
+					when scf =>
+						Cset <= '1';
+						Nstate <= exec2;
+
+					when ccf =>
+						Creset <= '1';
+						Nstate <= exec2;
+
+					when cwp =>
+						WPreset <= '1';
+						Nstate <= exec2;
+					
+					when others =>
+						Nstate <= exec2;
+
+					end case;
+
+				when others =>
+					Nstate <= default2;
+
+				end case ;
+		when exec1lda =>
+			RFLwrite <= '1';
+			RFHwrite <= '1';
+			Nstate <= exec1;		
+		when exec2lda =>
+			RFLwrite <= '1';
+			RFHwrite <= '1';
+			Nstate <= exec2;	
+		when exec1sta =>
+			WriteMem <= '1';
+			Nstate <= exec1;	
+		when exec2sta =>
+			WriteMem <= '1';
+			Nstate <= exec2;	
+		when exec1 =>
+			Nstate <= exec12;
+		when exec12 =>
+			Nstate <= default1;
+		when exec2 =>
+			Nstate <= exec22;
+		when exec22 =>
+			Nstate <= default2;
+		when others =>
+		end case;
+
+	end process;
+	
+end dataflow;

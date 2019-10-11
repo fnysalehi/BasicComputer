@@ -1,0 +1,17 @@
+library IEEE;
+use ieee.std_logic_1164.all;
+entity not_e is
+port(a : in std_logic_vector(15 downto 0);
+output : out std_logic_vector(15 downto 0);
+Z : out std_logic;
+C : out std_logic);
+end entity or_e;
+
+architecture arch of or_e is
+signal outp : std_logic_vector(15 downto 0);
+begin
+	C <= '0';
+	outp <= not a ;
+	Z <= '1' when outp="0000000000000000" else '0';
+	output <= outp;
+end architecture arch;

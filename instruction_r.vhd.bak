@@ -1,0 +1,25 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity instruction_r is   
+    	port
+   	(
+   	IRin		: in  std_logic_vector(15 downto 0);
+	IRload		: in std_logic;
+	clk          	: in std_logic;
+   	IRout		: out std_logic_vector(15 downto 0));
+end instruction_r;
+
+architecture behavioral of instruction_r is
+signal registers : registerFile;
+begin
+
+    process(clk)
+    begin
+        if rising_edge(clk) then 
+            if(IRload = '1') then
+            	IRout <= IRin;
+            end if;
+	end if;
+    end process;
+end behavioral;

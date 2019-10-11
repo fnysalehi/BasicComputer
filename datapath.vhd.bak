@@ -1,0 +1,68 @@
+library IEEE;
+use ieee.std_logic_1164.all;
+entity datapath is
+port(
+	addressbus,databus,addressUnitRSideBus: inout std_logic_vector (15 downto 0);
+	clk, 
+	EnablePC,ResetPC, PCplusI, PCplus1, RplusI, Rplus0, Address_on_Databus,			--addressing unit
+	RFLwrite, RFHwrite, Rs_on_AddressUnitRSide, Rd_on_AddressUnitRSide,				--register file
+	B15to0, AandB, AorB, AxorB, notB, AaddB, AsubB, AmulB, AcmpB, ShrB, ShlB, ALU_on_Databus,	--ALU
+	WPreset, WPadd,											--WP															
+	IRload,												--IR
+	Cset, Creset, Zset, Zreset, SRload,								--flags
+	Shadow                     : in std_logic;
+	Cout, Zout       : out  std_logic);
+
+end entity datapath;
+
+architecture df of datapath is
+
+  signal IRout,address,Rs,Rd,ALUout: std_logic_vector(15 downto 0);
+  signal IRmout: std_logic_vector(3 downto 0);
+  signal WPout: std_logic_vector(5 downto 0);
+  signal Zin,ZoutDakhel,Cin,CoutDakhel: std_logic;
+
+  constant one   : std_logic_vector (3 downto 0):= "1000";
+  constant two   : std_logic_vector (3 downto 0):= "0100";
+  constant three : std_logic_vector (3 downto 0):= "0010";
+  constant four  : std_logic_vector (3 downto 0):= "0001";
+ 
+  begin
+	AU   :entity work.AddressUnit port map(addressUnitRSideBus, IRout(7 downto 0), addressbus, clk, ResetPC, PCplusI, PCplus1, RplusI, Rplus0, EnablePC);
+
+	IR   :entity work.instruction_r port map(databus, IRload, clk, IRout);
+
+	IRm  :entity work.IRmux port map(IRout(11 downto 8), IRout(3 downto 0), Shadow, IRmout);
+
+	WP   :entity work.windowPointer port map(WPadd, WPreset, IRout(5 downto 0), clk, WPout);
+
+	FR   :entity work.register_fileYES port map(databus, RFLwrite, RFHwrite, clk, WPout, IRmout, Rs, Rd);
+
+	ALU  :entity work.alu port map(Rs, Rd, Zin, Cin, B15to0, AandB, AorB, notB, AaddB, AsubB, AmulB, AcmpB, ShrB, ShlB,  AxorB, ALUout, ZoutDakhel, CoutDakhel);
+
+	flag :entity work.flags port map(clk, Cset, Creset, Zset, Zreset, SRload, ZoutDakhel, CoutDakhel, Zin, Cin);
+
+      	process 
+		variable temp : std_logic_vector (3 downto 0);
+		begin
+			temp := (Address_on_Databus, Rs_on_AddressUnitRSide, Rd_on_AddressUnitRSide, ALU_on_Databus);
+			wait until (clk'event and clk='1');
+			if((Cset or Creset or Zset or Zreset or SRload)='1') then
+				Cout <= Cin;
+				Zout <= Zin;		
+			else
+				Cout <= CoutDakhel;
+				Zout <= ZoutDakhel;			
+			end if;
+			--Cout <= Cin when (Cset|Creset|Zset|Zreset|SRload)='1' else CoutDakhel;
+			--Cout <= CoutDakhel;
+			--Zout <= ZoutDakhel;
+			case temp is
+				when one => 	databus <= addressbus;
+				when two => 	addressUnitRSideBus <= Rs;
+				when three =>	addressUnitRSideBus <= Rd;
+				when four => 	databus <= ALUout;
+				when others => 
+			end case;
+	end process;
+end architecture df;

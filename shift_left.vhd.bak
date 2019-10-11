@@ -1,0 +1,19 @@
+library IEEE;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std;
+entity shift_right is
+port(a : in std_logic_vector(15 downto 0);
+output : out std_logic_vector(15 downto 0);
+Z : out std_logic;
+C : out std_logic);
+end entity shift_right;
+
+architecture arch of shift_right is
+signal outshl : std_logic_vector(15 downto 0);
+begin
+	outshl(0) <= '0';
+	C <= a(15);
+	outshl(15 downto 1) <= a(14 downto 0);
+	output <= outshl ;
+	Z <= '1' when outshl="0000000000000000" else '0';
+end architecture arch;

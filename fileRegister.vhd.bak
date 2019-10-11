@@ -1,0 +1,72 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity register_fileYES is   
+    port
+    (
+    	idata         : in  std_logic_vector(15 downto 0);
+    	RFLwrite      : in std_logic;
+    	RFHwrite      : in std_logic;
+    	clk	      : in std_logic;
+	WP	      : in std_logic_vector(5 downto 0);
+	sel           : in std_logic_vector(3 downto 0);
+	Rs            : out std_logic_vector(15 downto 0);
+	Rd            : out std_logic_vector(15 downto 0)		
+    );
+end register_fileYES;
+
+architecture behavioral of register_fileYES is
+constant one   : std_logic_vector (1 downto 0):= "01";
+constant two   : std_logic_vector (1 downto 0):= "10";
+constant three : std_logic_vector (1 downto 0):= "11";
+type registerFile is array(0 to 63) of std_logic_vector(15 downto 0);
+signal registers : registerFile;
+
+begin
+  	process(clk)
+	variable temp : std_logic_vector (1 downto 0);
+    	variable init : boolean := true;
+	begin
+		
+		if init = true then
+			-- some initiation
+			-- cwp
+			registers(0) <= "0000011000000110";
+
+			-- mil r0, 01011101
+			registers(1) <= "1111000001011101";
+
+			-- mih r0, 00000101
+			registers(2) <= "1111000100000101";
+
+			-- mil r1, 00000001
+			registers(3) <= "1111010000000001";
+
+			-- mih r1, 00000000
+			registers(4) <= "1111010100000000";
+
+			-- add r1, r0
+			registers(5) <= "1011010010110100";
+			init := false;
+		end if;
+
+	if (clk = '1') then
+		temp := (RFLwrite & RFHwrite);
+		Rs <= registers(to_integer(unsigned(WP)));
+		--Rs <= registers(to_integer(unsigned(WP))+to_integer(unsigned(sel(1 downto 0))));
+		Rd <= registers(to_integer(unsigned(WP))+to_integer(unsigned(sel(3 downto 2))));
+		case temp is  	
+			when one => 	registers(to_integer(unsigned(WP))+to_integer(unsigned(sel(3 downto 2))))(15 downto 8) <= idata(7 downto 0);
+					registers(to_integer(unsigned(WP))+to_integer(unsigned(sel(3 downto 2))))(7 downto 0) <= (others => '0');
+
+			when two => 	registers(to_integer(unsigned(WP))+to_integer(unsigned(sel(3 downto 2))))(7 downto 0) <= idata(7 downto 0);
+					registers(to_integer(unsigned(WP))+to_integer(unsigned(sel(3 downto 2))))(15 downto 8) <= (others => '0');
+
+			when three => 	registers(to_integer(unsigned(WP))+to_integer(unsigned(sel(3 downto 2)))) <= idata;
+
+			when others => 
+		end case;
+	end if;
+    end process;
+end behavioral;

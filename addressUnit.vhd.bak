@@ -1,0 +1,21 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+entity AddressUnit is
+port (
+	Rside : in std_logic_vector (15 downto 0);
+	Iside : in std_logic_vector (7 downto 0);
+	Address : out std_logic_vector (15 downto 0);
+	clk, ResetPC, PCplusI, PCplus1 : in std_logic;
+	RplusI, Rplus0, EnablePC : in std_logic);
+end AddressUnit;
+
+architecture dataflow of AddressUnit is
+	signal pcout : std_logic_vector (15 downto 0);
+	signal AddressSignal : std_logic_vector (15 downto 0);
+	begin
+		Address <= AddressSignal;
+		pc : entity work.programcounter port map(EnablePC, AddressSignal, clk, pcout);
+		al : entity work.AddressLogic port map(pcout, Rside, Iside, AddressSignal,
+		ResetPC, PCplusI, PCplus1, RplusI, Rplus0);
+end dataflow;

@@ -1,0 +1,84 @@
+library IEEE;
+use ieee.std_logic_1164.all;
+entity alu is
+port(
+clk : in std_logic;
+a,b : in std_logic_vector(15 downto 0);
+Zin,cin:in std_logic;
+B15to0,AandB,AorB,NotB,addB,AsubB,AmulB,AcmpB,ShrB,ShlB,AxorB:in std_logic;
+op : in std_logic_vector(10 downto 0);
+output : out std_logic_vector(15 downto 0);
+Zout,Cout : out std_logic);
+end entity alu;
+architecture df_FA of alu is
+  signal C_mul,C_com,C_sub,C_shiftR,C_shiftL,C_adder,C_and,C_xor,C_or,C_not,Z_mul,Z_com,Z_sub,Z_shiftR,Z_shiftL,Z_adder,Z_and,Z_xor,Z_or,Z_not,Z_h : std_logic;
+  signal out_mul,out_sub,out_shiftR,out_shiftL,out_adder,out_and,out_xor,out_or,out_not: std_logic_vector(15 downto 0);
+  signal immd: std_logic_vector(7 downto 0);
+  constant one   : std_logic_vector (10 downto 0):= "10000000000";
+  constant two   : std_logic_vector (10 downto 0):= "01000000000";
+  constant three : std_logic_vector (10 downto 0):= "00100000000";
+  constant four  : std_logic_vector (10 downto 0):= "00010000000";
+  constant five  : std_logic_vector (10 downto 0):= "00001000000";
+  constant six   : std_logic_vector (10 downto 0):= "00000100000";
+  constant seven   : std_logic_vector (10 downto 0):= "00000010000";
+  constant eight : std_logic_vector (10 downto 0):= "00000001000";
+  constant nine  : std_logic_vector (10 downto 0):= "00000000100";
+  constant ten  : std_logic_vector (10 downto 0):= "00000000010";
+  constant eleven  : std_logic_vector (10 downto 0):= "00000000001";
+  begin
+	mul : entity work.mult port map(a,b,out_mul,C_mul,Z_mul);
+	compare:entity work.comparator port map(a,b,Z_com,C_com);
+	sub : entity work.subtractor port map(a,b,Cin,out_sub,C_sub,Z_sub);
+	shiftR: entity work.shift_r port map(a,out_shiftR,Z_shiftR,C_shiftR);
+	shiftL: entity work.shift_l port map(a,out_shiftL,Z_shiftL,C_shiftL);
+	adder : entity work.adder port map(a,b,Cin,out_adder,C_adder,Z_adder);
+	and_e : entity work.and_e port map(a,b,out_and,Z_and,C_and);
+	xor_e : entity work.xor_e port map(a,b,out_xor,Z_xor,C_xor);
+	or_e : entity work.or_e port map(a,b,out_or,Z_or,C_or);
+	not_e : entity work.not_e port map(a,out_not,Z_not,C_not);
+	Z_h <= '1' when a="0000000000000000" else '0';
+
+      	process 
+		variable temp : std_logic_vector (10 downto 0);
+		begin
+			temp := (B15to0 & AandB & AorB & NotB & addB & AsubB & AmulB & AcmpB & ShrB & ShlB & AxorB);
+			wait until (clk'event and clk='1');
+			case temp is
+				when one => 	output <= a;
+					    	Zout   <= Z_h;
+		 			   	Cout   <= Cin;
+				when two => 	output <= out_and;
+					    	Zout   <= Z_and;
+						Cout   <= C_and;
+				when three =>	output <= out_or;
+						Zout   <= Z_or;
+						Cout   <= C_or;
+				when four => 	output <= out_not;
+						Zout   <= Z_not;
+						Cout   <= C_not;
+				when five => 	output <= out_adder;
+						Zout   <= Z_adder;
+						Cout   <= C_adder;
+				when six => 	output <= out_sub;
+						Zout   <= Z_sub;
+						Cout   <= C_sub;
+				when seven => 	output <= out_mul;
+						Zout   <= Z_mul;
+						Cout   <= C_mul;
+				when eight =>	output <= (others => '0');
+						Zout   <= Z_com;
+						Cout   <= C_com;
+				when nine => 	output <= out_shiftR;
+						Zout   <= Z_shiftR;
+						Cout   <= C_shiftR;
+				when ten => 	output <= out_shiftL;
+						Zout   <= Z_shiftL;
+						Cout   <= C_shiftL;
+				when eleven => 	output <= out_xor;
+						Zout   <= Z_xor;
+						Cout   <= C_xor;
+				when others => 
+			end case;
+	
+	end process;
+end architecture df_FA;

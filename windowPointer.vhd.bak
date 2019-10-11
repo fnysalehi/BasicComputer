@@ -1,0 +1,30 @@
+library IEEE;
+use ieee.std_logic_1164.all;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+entity windowPointer is
+port (
+	WPadd : in std_logic;
+	WPreset : in std_logic;
+	input: in std_logic_vector (5 downto 0);
+	clk : in std_logic;
+	output: out std_logic_vector (5 downto 0));
+end windowPointer;
+
+architecture dataflow of windowPointer is 
+signal C : std_logic_vector(5 downto 0); 
+signal tmp : std_logic_vector(5 downto 0);
+begin
+	process (clk) begin
+	temp <= C + input;
+		if (clk = '1') then
+			if (WPreset = '1') then
+				output <= (others => '0');
+				C <= (others => '0');			
+			end if;
+			if (WPadd = '1') then
+				C <= tmp;
+				output <= tmp;
+			end if;
+		end if;
+	end process;
+end dataflow;
